@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#8b0000">
+    <title>Sistema Autodistruzione</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💣</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💣</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background-color: #000;
+            color: #ff0000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            border: 3px solid #ff0000;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.9);
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.5);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .warning-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .warning-icon {
+            font-size: 3rem;
+            margin-right: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #ff0000;
+            margin-bottom: 10px;
+        }
+        
+        .countdown-display {
+            font-size: 8rem;
+            font-weight: bold;
+            margin: 30px 0;
+            text-shadow: 0 0 20px #ff0000;
+            animation: pulse 1s infinite alternate;
+        }
+        
+        .message {
+            font-size: 1.8rem;
+            margin: 20px 0;
+            min-height: 60px;
+            line-height: 1.4;
+        }
+        
+        .abort-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: rgba(255, 0, 0, 0.1);
+            border-radius: 10px;
+            border: 1px solid #ff0000;
+        }
+        
+        .abort-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5rem;
+            background-color: #000;
+            color: #ff0000;
+            border: 2px solid #ff0000;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        .abort-button {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background-color: #ff0000;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+        
+        .abort-button:hover {
+            background-color: #ff4444;
+            transform: scale(1.05);
+        }
+        
+        .final-message {
+            display: none;
+            font-size: 3rem;
+            color: #00ff00;
+            text-shadow: 0 0 25px #00ff00;
+            margin-top: 40px;
+            padding: 25px;
+            border: 3px solid #00ff00;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.9);
+            animation: pulse-green 2s infinite;
+            max-width: 800px;
+            line-height: 1.3;
+        }
+        
+        .flashing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ff0000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .audio-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .audio-btn {
+            padding: 10px 20px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .audio-btn:hover {
+            background-color: #444;
+        }
+        
+        .wisdom-message {
+            display: none;
+            font-size: 2.2rem;
+            color: #ffff00;
+            text-shadow: 0 0 15px #ffff00;
+            margin-top: 40px;
+            padding: 25px;
+            border: 3px solid #ffff00;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.9);
+            font-style: italic;
+            text-align: center;
+            max-width: 800px;
+            line-height: 1.3;
+            font-weight: bold;
+        }
+        
+        .restart-container {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .restart-button {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background-color: #0066cc;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .restart-button:hover {
+            background-color: #0088ff;
+            transform: scale(1.05);
+        }
+        
+        .restart-instructions {
+            color: #888;
+            font-size: 1rem;
+            margin-top: 15px;
+            line-height: 1.4;
+            max-width: 600px;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes pulse-green {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+            animation-iteration-count: infinite;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .countdown-display {
+                font-size: 6rem;
+            }
+            
+            .message {
+                font-size: 1.5rem;
+            }
+            
+            .warning-icon {
+                font-size: 2.5rem;
+            }
+            
+            .final-message {
+                font-size: 2rem;
+                padding: 15px;
+                max-width: 90%;
+            }
+            
+            .wisdom-message {
+                font-size: 1.8rem;
+                padding: 15px;
+                max-width: 90%;
+            }
+            
+            .restart-button {
+                font-size: 1.3rem;
+                padding: 12px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="flashing-overlay" id="flashingOverlay"></div>
+    
+    <div class="container" id="mainContainer">
+        <div class="warning-header">
+            <div class="warning-icon">⚠️</div>
+            <h1>SISTEMA DI AUTODISTRUZIONE ATTIVATO</h1>
+        </div>
+        
+        <div class="message" id="message">
+            IL SISTEMA SI AUTODISTRUGGERÀ IN 20 SECONDI<br>PER ABORTIRE L'OPERAZIONE CHIEDERE A SANDRO
+        </div>
+        
+        <div class="countdown-display" id="countdown">20</div>
+        
+        <div class="abort-section">
+            <p>INSERISCI IL NOME PER ABORTIRE L'AUTODISTRUZIONE</p>
+            <input type="text" class="abort-input" id="abortInput" placeholder="INIZIA A DIGITARE..." autocomplete="off">
+            <button class="abort-button" id="abortButton">ABORTIRE</button>
+        </div>
+        
+        <div class="audio-controls">
+            <button class="audio-btn" id="muteBtn">🔇 SILENZIA</button>
+            <button class="audio-btn" id="volumeUpBtn">🔊 + VOLUME</button>
+            <button class="audio-btn" id="volumeDownBtn">🔉 - VOLUME</button>
+        </div>
+    </div>
+    
+    <div class="final-message" id="finalMessage">
+        L'HAI SCAMPATA BELLA!<br>COME SEMPRE IL NOME SANDRO È GARANZIA DI SOLUZIONE
+    </div>
+    
+    <div class="wisdom-message" id="wisdomMessage">
+        IL SISTEMA È STATO DISATTIVATO<br>
+        E RICORDA AL NEMICO:<br>
+        NON AUGURAR LA MORTE<br>
+        MA IL PRURITO AL CULO<br>
+        E LEBRACCIA CORTE!
+    </div>
+    
+    <div class="restart-container" id="restartContainer">
+        <button class="restart-button" id="restartButton">🔄 RIAVVIA L'APP</button>
+        <div class="restart-instructions">
+            <strong>Se il pulsante non funziona su iPad:</strong><br>
+            1. Chiudi l'app completamente (swipe up dalla barra multitasking)<br>
+            2. Riapri l'app dalla schermata Home<br>
+            <em>oppure</em><br>
+            1. Tocca il pulsante "Condividi" (⬆️) in Safari<br>
+            2. Seleziona "Aggiungi alla schermata Home"<br>
+            3. Riapri dalla nuova icona
+        </div>
+    </div>
+
+    <!-- Audio context per generare suoni -->
+    <script>
+        // Funzione per generare suoni
+        class SoundGenerator {
+            constructor() {
+                this.audioContext = null;
+                this.masterVolume = 0.7;
+                this.isMuted = false;
+                this.init();
+            }
+            
+            init() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.createMasterGain();
+                } catch (e) {
+                    console.log("Web Audio API non supportata:", e);
+                }
+            }
+            
+            createMasterGain() {
+                this.masterGain = this.audioContext.createGain();
+                this.masterGain.gain.value = this.masterVolume;
+                this.masterGain.connect(this.audioContext.destination);
+            }
+            
+            // Suono di allarme digitale (beep continuo)
+            playAlarmBeep(duration = 0.5, frequency = 800) {
+                if (!this.audioContext || this.isMuted) return null;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                // Modulazione volume per effetto beep
+                gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.5, this.audioContext.currentTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.05, this.audioContext.currentTime + duration);
+                
+                oscillator.start();
+                oscillator.stop(this.audioContext.currentTime + duration);
+                
+                return oscillator;
+            }
+            
+            // Suono di allarme sirena
+            playSiren(duration = 3) {
+                if (!this.audioContext || this.isMuted) return null;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                oscillator.type = 'sawtooth';
+                gainNode.gain.value = 0.4;
+                
+                // Effetto sirena (frequenza oscillante)
+                const startTime = this.audioContext.currentTime;
+                oscillator.frequency.setValueAtTime(600, startTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + duration/2);
+                oscillator.frequency.exponentialRampToValueAtTime(600, startTime + duration);
+                
+                oscillator.start();
+                oscillator.stop(startTime + duration);
+                
+                return oscillator;
+            }
+            
+            // Suono di countdown (tic-tac)
+            playCountdownTick() {
+                if (!this.audioContext || this.isMuted) return null;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                oscillator.frequency.value = 1000;
+                oscillator.type = 'sine';
+                
+                // Tic breve e secco
+                gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                
+                oscillator.start();
+                oscillator.stop(this.audioContext.currentTime + 0.1);
+                
+                return oscillator;
+            }
+            
+            // Suono di errore
+            playErrorSound() {
+                if (!this.audioContext || this.isMuted) return null;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                oscillator.frequency.value = 300;
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+                
+                oscillator.frequency.setValueAtTime(300, this.audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.5);
+                
+                oscillator.start();
+                oscillator.stop(this.audioContext.currentTime + 0.5);
+                
+                return oscillator;
+            }
+            
+            // Suono di successo
+            playSuccessSound() {
+                if (!this.audioContext || this.isMuted) return null;
+                
+                const now = this.audioContext.currentTime;
+                
+                // Creare più oscillator per un suono più ricco
+                for (let i = 0; i < 3; i++) {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.masterGain);
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = 523.25 * (i + 1); // Do, Sol, Do alto
+                    
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.2/(i+1), now + 0.1);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 2);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + 2);
+                }
+            }
+            
+            // Suono di esplosione
+            playExplosion() {
+                if (!this.audioContext || this.isMuted) return null;
+                
+                const now = this.audioContext.currentTime;
+                
+                // Rumore bianco per l'esplosione
+                const bufferSize = this.audioContext.sampleRate * 2;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = this.audioContext.createBufferSource();
+                noise.buffer = buffer;
+                
+                const gainNode = this.audioContext.createGain();
+                noise.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                // Envelope per l'esplosione
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.8, now + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+                
+                // Filtro passa-basso per simulare l'esplosione
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 1000;
+                filter.frequency.exponentialRampToValueAtTime(100, now + 1.5);
+                
+                gainNode.connect(filter);
+                filter.connect(this.masterGain);
+                
+                noise.start(now);
+                noise.stop(now + 1.5);
+                
+                // Aggiungere un tono basso
+                const oscillator = this.audioContext.createOscillator();
+                const oscGain = this.audioContext.createGain();
+                
+                oscillator.connect(oscGain);
+                oscGain.connect(this.masterGain);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 80;
+                
+                oscGain.gain.setValueAtTime(0, now);
+                oscGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, now + 1);
+                
+                oscillator.start(now);
+                oscillator.stop(now + 1);
+            }
+            
+            // Suono di statica/disturbo
+            playStatic(duration = 1) {
+                if (!this.audioContext || this.isMuted) return null;
+                
+                const bufferSize = this.audioContext.sampleRate * duration;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = this.audioContext.createBufferSource();
+                noise.buffer = buffer;
+                
+                const gainNode = this.audioContext.createGain();
+                noise.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                gainNode.gain.value = 0.1;
+                
+                noise.start();
+                noise.stop(this.audioContext.currentTime + duration);
+                
+                return noise;
+            }
+            
+            // Suono di clacson/alert
+            playAlert() {
+                if (!this.audioContext || this.isMuted) return null;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                oscillator.type = 'square';
+                
+                // Doppio beep
+                const now = this.audioContext.currentTime;
+                oscillator.frequency.setValueAtTime(800, now);
+                
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.4, now + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                
+                gainNode.gain.setValueAtTime(0, now + 0.3);
+                gainNode.gain.linearRampToValueAtTime(0.4, now + 0.4);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                
+                oscillator.start(now);
+                oscillator.stop(now + 0.5);
+                
+                return oscillator;
+            }
+            
+            // Cambia volume
+            setVolume(value) {
+                this.masterVolume = Math.max(0, Math.min(1, value));
+                if (this.masterGain) {
+                    this.masterGain.gain.value = this.masterVolume;
+                }
+            }
+            
+            // Silenzia/attiva audio
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                if (this.masterGain) {
+                    this.masterGain.gain.value = this.isMuted ? 0 : this.masterVolume;
+                }
+                return this.isMuted;
+            }
+        }
+        
+        // Inizializzazione dell'app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementi DOM
+            const countdownDisplay = document.getElementById('countdown');
+            const messageDisplay = document.getElementById('message');
+            const abortInput = document.getElementById('abortInput');
+            const abortButton = document.getElementById('abortButton');
+            const mainContainer = document.getElementById('mainContainer');
+            const finalMessage = document.getElementById('finalMessage');
+            const flashingOverlay = document.getElementById('flashingOverlay');
+            const muteBtn = document.getElementById('muteBtn');
+            const volumeUpBtn = document.getElementById('volumeUpBtn');
+            const volumeDownBtn = document.getElementById('volumeDownBtn');
+            const wisdomMessage = document.getElementById('wisdomMessage');
+            const restartContainer = document.getElementById('restartContainer');
+            const restartButton = document.getElementById('restartButton');
+            
+            // Inizializza il generatore di suoni
+            const soundGen = new SoundGenerator();
+            
+            // Variabili per il conto alla rovescia
+            let countdown = 20;
+            let countdownInterval;
+            let isAborted = false;
+            let alarmInterval;
+            let sirenInterval;
+            
+            // Messaggi di sistema durante il conto alla rovescia
+            const systemMessages = [
+                "20 SECONDI: INIZIALIZZAZIONE SEQUENZA DI AUTODISTRUZIONE",
+                "18 SECONDI: SCANSIONE SISTEMI CRITICI IN CORSO",
+                "15 SECONDI: ATTIVAZIONE PROTOCOLLO DI EMERGENZA",
+                "12 SECONDI: DISATTIVAZIONE SICUREZZE IN CORSO",
+                "10 SECONDI: ATTIVAZIONE SOVRACCARICO REATTORE",
+                "8 SECONDI: CARICAMENTO SEQUENZA FINALE",
+                "6 SECONDI: IMPOSSIBILE FERMARE LA PROCEDURA",
+                "5 SECONDI: LIVELLO DI PERICOLO MASSIMO",
+                "4 SECONDI: SOVRACCARICO CRITICO",
+                "3 SECONDI: ATTIVAZIONE DETONATORI",
+                "2 SECONDI: AUTODISTRUZIONE IMMINENTE",
+                "1 SECONDO: BUONA FORTUNA..."
+            ];
+            
+            // Inizializza l'app
+            function initializeApp() {
+                // Riavvia l'audio context se necessario
+                if (soundGen.audioContext && soundGen.audioContext.state === 'suspended') {
+                    soundGen.audioContext.resume();
+                }
+                
+                // Avvia il conto alla rovescia
+                startCountdown();
+                
+                // Avvia i suoni allarmanti
+                playAlarmSounds();
+                
+                // Imposta gli event listener
+                abortButton.addEventListener('click', abortDestruction);
+                abortInput.addEventListener('keyup', function(event) {
+                    if (event.key === 'Enter') {
+                        abortDestruction();
+                    }
+                });
+                
+                restartButton.addEventListener('click', restartApp);
+                
+                // Controlli audio
+                muteBtn.addEventListener('click', function() {
+                    const isMuted = soundGen.toggleMute();
+                    muteBtn.textContent = isMuted ? "🔇 AUDIO OFF" : "🔊 AUDIO ON";
+                });
+                
+                volumeUpBtn.addEventListener('click', function() {
+                    soundGen.setVolume(soundGen.masterVolume + 0.1);
+                });
+                
+                volumeDownBtn.addEventListener('click', function() {
+                    soundGen.setVolume(soundGen.masterVolume - 0.1);
+                });
+                
+                // Imposta l'icona e il titolo per PWA
+                setupPWA();
+                
+                // Permetti l'audio al primo click (necessario per alcuni browser)
+                document.addEventListener('click', function initAudio() {
+                    if (soundGen.audioContext && soundGen.audioContext.state === 'suspended') {
+                        soundGen.audioContext.resume();
+                    }
+                    document.removeEventListener('click', initAudio);
+                });
+            }
+            
+            // Avvia il conto alla rovescia
+            function startCountdown() {
+                countdownInterval = setInterval(function() {
+                    if (countdown > 0 && !isAborted) {
+                        countdown--;
+                        countdownDisplay.textContent = countdown;
+                        
+                        // Suono di countdown
+                        if (countdown <= 10) {
+                            soundGen.playCountdownTick();
+                        }
+                        
+                        // Cambia messaggio in base al tempo rimanente
+                        updateMessage();
+                        
+                        // Aumenta l'intensità degli effetti
+                        intensifyEffects();
+                    } else if (countdown === 0 && !isAborted) {
+                        // Autodistruzione completata
+                        completeDestruction();
+                    }
+                }, 1000);
+            }
+            
+            // Aggiorna il messaggio in base al tempo rimanente
+            function updateMessage() {
+                for (let i = systemMessages.length - 1; i >= 0; i--) {
+                    const time = parseInt(systemMessages[i].split(' ')[0]);
+                    if (countdown <= time) {
+                        messageDisplay.textContent = systemMessages[i];
+                        
+                        // Suono speciale per alcuni messaggi
+                        if (countdown === 10 || countdown === 5 || countdown === 3) {
+                            soundGen.playAlert();
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+            
+            // Aumenta l'intensità degli effetti man mano che il tempo passa
+            function intensifyEffects() {
+                // Aumenta la frequenza del lampeggio
+                const flashIntensity = 1 - (countdown / 20);
+                
+                // Effetto lampeggio
+                if (countdown <= 10) {
+                    const randomFlash = Math.random() * flashIntensity * 0.7;
+                    flashingOverlay.style.opacity = randomFlash;
+                    
+                    // Aggiungi effetto shake quando mancano pochi secondi
+                    if (countdown <= 5) {
+                        mainContainer.classList.add('shake');
+                        
+                        // Aumenta frequenza sirena
+                        if (sirenInterval) {
+                            clearInterval(sirenInterval);
+                        }
+                        sirenInterval = setInterval(() => {
+                            soundGen.playSiren(0.5);
+                        }, 800);
+                    }
+                }
+            }
+            
+            // Riproduci i suoni allarmanti
+            function playAlarmSounds() {
+                // Allarme digitale ogni secondo
+                alarmInterval = setInterval(() => {
+                    if (!isAborted) {
+                        soundGen.playAlarmBeep(0.3, 600 + Math.random() * 200);
+                    }
+                }, 1000);
+                
+                // Sirena ogni 3 secondi
+                sirenInterval = setInterval(() => {
+                    if (!isAborted) {
+                        soundGen.playSiren(1.5);
+                    }
+                }, 3000);
+                
+                // Suono di statica occasionale
+                setInterval(() => {
+                    if (!isAborted && Math.random() > 0.7) {
+                        soundGen.playStatic(0.5);
+                    }
+                }, 5000);
+            }
+            
+            // Funzione per abortire l'autodistruzione
+            function abortDestruction() {
+                const inputValue = abortInput.value.trim().toLowerCase();
+                
+                if (inputValue === "sandro" && !isAborted) {
+                    isAborted = true;
+                    clearInterval(countdownInterval);
+                    clearInterval(alarmInterval);
+                    clearInterval(sirenInterval);
+                    
+                    // Riproduci suono di successo
+                    setTimeout(() => {
+                        soundGen.playSuccessSound();
+                    }, 300);
+                    
+                    // Mostra il messaggio finale
+                    setTimeout(() => {
+                        mainContainer.style.display = 'none';
+                        finalMessage.style.display = 'block';
+                    }, 500);
+                    
+                    // Dopo 5 secondi mostra il messaggio di saggezza
+                    setTimeout(() => {
+                        finalMessage.style.display = 'none';
+                        wisdomMessage.style.display = 'block';
+                        restartContainer.style.display = 'block';
+                    }, 5000);
+                    
+                    // Rimuovi effetti di shake
+                    mainContainer.classList.remove('shake');
+                    
+                    // Resetta il lampeggio
+                    flashingOverlay.style.opacity = 0;
+                    
+                    // Cambia colore di sfondo
+                    document.body.style.backgroundColor = "#001100";
+                    
+                    // Suono di conferma
+                    soundGen.playAlert();
+                    
+                } else {
+                    // Messaggio di errore se il nome è sbagliato
+                    if (!isAborted) {
+                        abortInput.value = "";
+                        abortInput.placeholder = "NOME ERRATO! RIPROVA!";
+                        abortInput.style.borderColor = "#ff9900";
+                        
+                        // Riproduci suono di errore
+                        soundGen.playErrorSound();
+                        
+                        // Ripristina dopo un secondo
+                        setTimeout(() => {
+                            abortInput.placeholder = "INIZIA A DIGITARE...";
+                            abortInput.style.borderColor = "#ff0000";
+                        }, 1000);
+                    }
+                }
+            }
+            
+            // Completa l'autodistruzione
+            function completeDestruction() {
+                clearInterval(alarmInterval);
+                clearInterval(sirenInterval);
+                
+                // Effetto finale di esplosione
+                flashingOverlay.style.opacity = 1;
+                flashingOverlay.style.backgroundColor = "#ffffff";
+                
+                // Suono di esplosione
+                setTimeout(() => {
+                    soundGen.playExplosion();
+                }, 200);
+                
+                // Nascondi tutto
+                setTimeout(() => {
+                    mainContainer.style.display = 'none';
+                }, 500);
+                
+                // Mostra messaggio finale di distruzione
+                setTimeout(() => {
+                    finalMessage.textContent = "SISTEMA DISTRUTTO\nTUTTI I DATI SONO STATI ELIMINATI";
+                    finalMessage.style.color = "#ff0000";
+                    finalMessage.style.borderColor = "#ff0000";
+                    finalMessage.style.animation = "pulse 0.5s infinite";
+                    finalMessage.style.display = 'block';
+                    
+                    // Dopo 5 secondi mostra il messaggio di saggezza (anche se il sistema è distrutto)
+                    setTimeout(() => {
+                        finalMessage.style.display = 'none';
+                        wisdomMessage.style.display = 'block';
+                        wisdomMessage.style.color = "#ff9900";
+                        wisdomMessage.style.borderColor = "#ff9900";
+                        restartContainer.style.display = 'block';
+                    }, 5000);
+                    
+                    // Suoni di sistema distrutto
+                    setTimeout(() => {
+                        soundGen.playStatic(2);
+                    }, 100);
+                }, 1000);
+            }
+            
+            // Funzione per riavviare l'app
+            function restartApp() {
+                // Reset di tutte le variabili
+                countdown = 20;
+                isAborted = false;
+                
+                // Reset display
+                countdownDisplay.textContent = "20";
+                messageDisplay.textContent = "IL SISTEMA SI AUTODISTRUGGERÀ IN 20 SECONDI<br>PER ABORTIRE L'OPERAZIONE CHIEDERE A SANDRO";
+                abortInput.value = "";
+                abortInput.placeholder = "INIZIA A DIGITARE...";
+                abortInput.style.borderColor = "#ff0000";
+                
+                // Nascondi tutti i messaggi finali
+                finalMessage.style.display = 'none';
+                wisdomMessage.style.display = 'none';
+                restartContainer.style.display = 'none';
+                
+                // Mostra il container principale
+                mainContainer.style.display = 'block';
+                
+                // Reset effetti visivi
+                flashingOverlay.style.opacity = 0;
+                mainContainer.classList.remove('shake');
+                document.body.style.backgroundColor = "#000";
+                
+                // Ferma tutti gli intervalli precedenti
+                clearInterval(countdownInterval);
+                clearInterval(alarmInterval);
+                clearInterval(sirenInterval);
+                
+                // Suono di riavvio
+                soundGen.playAlert();
+                
+                // Riavvia il conto alla rovescia
+                setTimeout(() => {
+                    startCountdown();
+                    playAlarmSounds();
+                }, 1000);
+            }
+            
+            // Configura PWA per l'installazione su iPad
+            function setupPWA() {
+                // Rileva se l'app è stata avviata come PWA
+                if (window.matchMedia('(display-mode: standalone)').matches || 
+                    window.navigator.standalone === true) {
+                    console.log("App avviata come PWA");
+                }
+                
+                // Aggiungi listener per l'installazione
+                let deferredPrompt;
+                
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                });
+            }
+            
+            // Avvia l'app
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
